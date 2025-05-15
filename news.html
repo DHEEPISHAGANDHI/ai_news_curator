@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>News | AI News Curator</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Special+Gothic+Condensed+One&display=swap');
+    body {
+      background: url('news.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: white;
+      font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+      position: relative;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.75);
+      z-index: -1;
+    }
+    .navbar {
+      background-color: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+    }
+    .news-card {
+      background-color: rgba(31, 31, 31, 0.95);
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.6);
+      transition: transform 0.3s ease;
+      opacity: 0;
+      animation: fadeUp 0.6s ease forwards;
+      animation-delay: var(--delay, 0s);
+      position: relative;
+    }
+    .news-card:hover {
+      transform: scale(1.01);
+    }
+    .news-card h5 {
+      color: #1578e9;
+      font-family: Special Gothic Condensed One;
+      font-size: 25px;
+      font-weight: 500;
+      padding-right: 30px;
+    }
+    .credibility-badge {
+      font-size: 0.8rem;
+    }
+    .category-section {
+      margin-top: 40px;
+      animation: fadeUp 0.8s ease forwards;
+    }
+    .category-title {
+      border-left: 5px solid #999;
+      padding-left: 10px;
+      margin-bottom: 20px;
+      font-weight: 600;
+      color: #ffa200;
+    }
+    .filtered-heading {
+      color: #ffb347 !important;
+    }
+    h2.text-center {
+      color: #ffffff;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .chat-toggle-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 999;
+      background-color: #ffcc00;
+      color: rgb(0, 0, 0);
+      border: none;
+      padding: 12px 20px;
+      border-radius: 25px;
+      font-weight: bold;
+      transition: background-color 0.3s ease;
+    }
+    .chat-toggle-btn:hover {
+      background-color: #666;
+    }
+    .chatbot-container {
+      position: fixed;
+      top: 0;
+      right: -100%;
+      height: 100vh;
+      width: 350px;
+      max-width: 100%;
+      background-color: #1f1f1f;
+      box-shadow: -2px 0 10px rgba(0,0,0,0.5);
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      z-index: 1100;
+      transition: right 0.4s ease;
+    }
+    .chatbot-container.active {
+      right: 0;
+    }
+    .chatbot-container h5 {
+      color: #ccc;
+      margin-bottom: 10px;
+    }
+    .chat-close-btn {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.5rem;
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      cursor: pointer;
+    }
+    .chat-input {
+      display: flex;
+      margin-top: auto;
+      padding-top: 10px;
+      background-color: #1f1f1f;
+    }
+    .chat-input input {
+      flex: 1;
+      padding: 8px 12px;
+      background-color: #333;
+      border: none;
+      color: white;
+      border-radius: 5px 0 0 5px;
+    }
+    .chat-input button {
+      background-color: #ffcc00;
+      border: none;
+      padding: 8px 15px;
+      color: rgb(0, 0, 0);
+      border-radius: 0 5px 5px 0;
+    }
+    #chatMessages {
+      overflow-y: auto;
+      flex: 1;
+      margin-bottom: 10px;
+      color: #ddd;
+      max-height: 80vh;
+    }
+    .chat-message {
+      margin-bottom: 10px;
+    }
+    .chat-message.user {
+      text-align: right;
+      color: #86e1fc;
+    }
+    .chat-message.ai {
+      text-align: left;
+      color: #aaa;
+      font-style: italic;
+    }
+    @media (max-width: 768px) {
+      .chatbot-container {
+        width: 100%;
+      }
+      .chat-toggle-btn {
+        bottom: 10px;
+        right: 10px;
+      }
+    }
+
+    /* Heart Icon Styles */
+    .favorite-btn {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #aaa;
+      transition: all 0.3s ease;
+      z-index: 10;
+    }
+    
+    .favorite-btn:hover {
+      transform: scale(1.2);
+    }
+    
+    .favorite-btn.active {
+      color: #ff3366;
+      animation: heartBeat 0.5s ease-in-out;
+    }
+    
+    @keyframes heartBeat {
+      0% { transform: scale(1); }
+      25% { transform: scale(1.2); }
+      50% { transform: scale(1); }
+      75% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+
+    .favorites-page .no-favorites {
+      text-align: center;
+      padding: 50px 20px;
+      color: #aaa;
+    }
+
+    .favorites-link {
+      position: relative;
+    }
+
+    .favorites-badge {
+      position: absolute;
+      top: 0;
+      right: -5px;
+      background-color: #ff3366;
+      color: white;
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      font-size: 0.7rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .card-controls {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  display: flex;
+  gap: 10px;
+  z-index: 10;
+}
+
+.speak-btn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #aaa;
+  transition: all 0.3s ease;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.speak-btn:hover {
+  color: #ffcc00;
+  transform: scale(1.1);
+}
+
+.speak-btn.speaking {
+  color: #ffcc00;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.favorite-btn {
+  position: static; 
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #aaa;
+  transition: all 0.3s ease;
+}
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top shadow-sm">
+  <div class="container-fluid">
+    <a class="navbar-brand fw-bold d-flex align-items-center" href="#">
+      <img src="logo.png" alt="AI News Logo" width="40" height="40" class="me-2" style="border-radius: 50%;" />
+      UnFiltered News
+    </a>
+    
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+      <ul class="navbar-nav me-3">
+        <li class="nav-item"><a class="nav-link" href="dejavu.html">Deja-Vu</a></li>
+        <li class="nav-item">
+          <a class="nav-link favorites-link" href="favourites.html">
+            Favorites
+            <span id="favoritesCounter" class="favorites-badge">0</span>
+          </a>
+        </li>
+        <li class="nav-item"><a class="nav-link" href="gg.html">Fake News Finder</a></li>
+        <li class="nav-item"><a class="nav-link" href="emote.html">Sentiment</a></li>
+        <li class="nav-item"><a class="nav-link" href="extra.html">Social</a></li>
+
+        <div id="google_translate_element"></div>
+      </ul>
+      <div class="dropdown">
+        <button class="btn btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+          Filter by Category
+        </button>
+        <ul class="dropdown-menu dropdown-menu-dark">
+          <li><a class="dropdown-item" href="#" onclick="filterBy('general')">General</a></li>
+          <li><a class="dropdown-item" href="#" onclick="filterBy('technology')">Technology</a></li>
+          <li><a class="dropdown-item" href="#" onclick="filterBy('business')">Business</a></li>
+          <li><a class="dropdown-item" href="#" onclick="filterBy('health')">Health</a></li>
+          <li><a class="dropdown-item" href="#" onclick="filterBy('science')">Science</a></li>
+          <li><a class="dropdown-item" href="#" onclick="filterBy('sports')">Sports</a></li>
+          <li><a class="dropdown-item" href="#" onclick="filterBy('football')">Football</a></li>
+          <li><a class="dropdown-item" href="#" onclick="filterBy('cricket')">Cricket</a></li>
+          <li><a class="dropdown-item" href="#" onclick="filterBy('entertainment')">Entertainment</a></li>
+          <li><a class="dropdown-item" href="#" onclick="filterBy('politics')">Politics</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container py-5">
+  <h2 class="text-center mb-4"> Top News From Your Preferences</h2>
+  <div id="newsContent"></div>
+</div>
+
+<div class="chatbot-container" id="chatbotContainer">
+  <button class="chat-close-btn" onclick="toggleChat()">×</button>
+  <h5>AI Assistant</h5>
+  <div id="chatMessages"></div>
+  <div class="chat-input">
+    <input type="text" id="userInput" placeholder="Ask something..." onkeypress="handleKeyPress(event)">
+    <button onclick="sendMessage()">Send</button>
+  </div>
+</div>
+
+<button class="chat-toggle-btn" onclick="toggleChat()">AI Chat</button>
+
+<script>
+  const apiKey = "e2561402e840486aa86e56f2fe6f0681";
+  const preferences = JSON.parse(localStorage.getItem("userPreferences")) || ['general'];
+  const credibilityLevels = {
+    "BBC News": "High", "CNN": "Moderate", "Fox News": "Low", "The Verge": "Moderate",
+    "Al Jazeera English": "High", "NDTV": "Moderate", "Sky Sports": "High", "ESPN": "High",
+    "Reuters": "High", "The Guardian": "High", "Hindustan Times": "Moderate", "Times of India": "Moderate"
+  };
+
+  let favorites = JSON.parse(localStorage.getItem("favoriteNews")) || [];
+  
+  function updateFavoritesCounter() {
+    const counter = document.getElementById("favoritesCounter");
+    if (counter) {
+      counter.textContent = favorites.length;
+      counter.style.display = favorites.length > 0 ? "flex" : "none";
+    }
+  }
+  
+  function toggleFavorite(article) {
+    const articleId = generateArticleId(article);
+    const index = favorites.findIndex(fav => generateArticleId(fav) === articleId);
+    
+    if (index === -1) {
+      // Add to favorites
+      favorites.push(article);
+      localStorage.setItem("favoriteNews", JSON.stringify(favorites));
+      return true;
+    } else {
+      // Remove from favorites
+      favorites.splice(index, 1);
+      localStorage.setItem("favoriteNews", JSON.stringify(favorites));
+      return false;
+    }
+  }
+  
+  function isArticleFavorite(article) {
+    const articleId = generateArticleId(article);
+    return favorites.some(fav => generateArticleId(fav) === articleId);
+  }
+  
+  function generateArticleId(article) {
+    return `${article.title}-${article.source.name}`.replace(/[^a-zA-Z0-9]/g, '');
+  }
+
+  function credibilityColor(level) {
+    switch (level) {
+      case "High": return "success";
+      case "Moderate": return "warning";
+      case "Low": return "danger";
+      default: return "secondary";
+    }
+  }
+
+  async function fetchNewsByCategory(category) {
+    let queryParam = category;
+    if (category === 'football') queryParam = 'football OR UCL OR premier league';
+    else if (category === 'cricket') queryParam = 'cricket OR IPL OR world cup';
+
+    const url = category === 'football' || category === 'cricket'
+      ? `https://newsapi.org/v2/everything?q=${encodeURIComponent(queryParam)}&language=en&pageSize=6&apiKey=${apiKey}`
+      : `https://newsapi.org/v2/top-headlines?category=${category}&language=en&pageSize=6&apiKey=${apiKey}`;
+
+    const response = await fetch(url);
+    const data = await response.json();
+    return data.articles || [];
+  }
+
+  function renderNewsCard(article, index) {
+    const source = article.source.name;
+    const credibility = credibilityLevels[source] || "Unknown";
+    const isFavorite = isArticleFavorite(article);
+    
+    const articleId = generateArticleId(article);
+    
+    return `
+      <div class="news-card" style="--delay: ${0.1 * index}s" data-article-id="${articleId}">
+        <button class="favorite-btn ${isFavorite ? 'active' : ''}" onclick="handleFavoriteClick(this, ${JSON.stringify(article).replace(/"/g, '&quot;')})">
+          <i class="fas fa-heart"></i>
+        </button>
+        <h5>${article.title}</h5>
+        <p><small>${source} 
+          <span class="badge bg-${credibilityColor(credibility)} credibility-badge">${credibility} Credibility</span>
+        </small></p>
+        <p>${article.description || "No description available."}</p>
+        <a href="${article.url}" class="btn btn-outline-light btn-sm" target="_blank">Read Full</a>
+      </div>
+    `;
+  }
+
+  async function loadNews() {
+    const content = document.getElementById("newsContent");
+    if (!content) return; 
+    
+    content.innerHTML = "";
+    for (let i = 0; i < preferences.length; i++) {
+      const category = preferences[i];
+      const articles = await fetchNewsByCategory(category);
+      if (!articles.length) continue;
+      const section = document.createElement("div");
+      section.classList.add("category-section");
+      section.innerHTML = `<h4 class="category-title">${category.charAt(0).toUpperCase() + category.slice(1)}</h4>`;
+      
+      articles.forEach((article, index) => {
+        section.innerHTML += renderNewsCard(article, index);
+      });
+      
+      content.appendChild(section);
+    }
+    
+    updateFavoritesCounter();
+  }
+
+  async function filterBy(category) {
+    const content = document.getElementById("newsContent");
+    content.innerHTML = `<h4 class="category-title filtered-heading">${category.charAt(0).toUpperCase() + category.slice(1)} (Filtered)</h4>`;
+    const articles = await fetchNewsByCategory(category);
+    if (!articles.length) {
+      content.innerHTML += `<p class="text-muted">No articles found.</p>`;
+      return;
+    }
+    
+    articles.forEach((article, index) => {
+      content.innerHTML += renderNewsCard(article, index);
+    });
+    
+    updateFavoritesCounter();
+  }
+
+  function loadFavorites() {
+    const content = document.getElementById("favoritesContent");
+    if (!content) return;
+    if (favorites.length === 0) {
+      content.innerHTML = `
+        <div class="no-favorites">
+          <i class="fas fa-heart-broken fa-4x mb-3"></i>
+          <h4>No Favorite Articles Yet</h4>
+          <p>Click the heart icon on any news to add it to your favorites</p>
+          <a href="index.html" class="btn btn-outline-light mt-3">Browse News</a>
+        </div>
+      `;
+      return;
+    }
+    
+    content.innerHTML = "";
+    favorites.forEach((article, index) => {
+      content.innerHTML += renderNewsCard(article, index);
+    });
+  }
+
+  function handleFavoriteClick(button, article) {
+    const isFavorite = toggleFavorite(article);
+    
+    if (isFavorite) {
+      button.classList.add('active');
+    } else {
+      button.classList.remove('active');
+      
+      // If we're on the favorites page, remove the card
+      const currentPage = window.location.pathname.split('/').pop();
+      if (currentPage === 'favorites.html') {
+        const card = button.closest('.news-card');
+        card.style.animation = 'fadeUp 0.6s ease reverse forwards';
+        setTimeout(() => {
+          card.remove();
+          if (document.querySelectorAll('.news-card').length === 0) {
+            loadFavorites(); 
+          }
+        }, 600);
+      }
+    }
+    
+    updateFavoritesCounter();
+  }
+
+  function toggleChat() {
+    document.getElementById("chatbotContainer").classList.toggle("active");
+  }
+
+  function handleKeyPress(e) {
+    if (e.key === "Enter") sendMessage();
+  }
+
+  async function sendMessage() {
+    const input = document.getElementById("userInput");
+    const message = input.value.trim();
+    if (!message) return;
+
+    const chatBox = document.getElementById("chatMessages");
+
+    const userMessage = document.createElement("div");
+    userMessage.className = "chat-message user";
+    userMessage.innerText = message;
+    chatBox.appendChild(userMessage);
+
+    const aiMessage = document.createElement("div");
+    aiMessage.className = "chat-message ai";
+    chatBox.appendChild(aiMessage);
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    input.value = "";
+
+    const greetingRegex = /^(hi|hello|hey|hii|yo)\b/i;
+    const categoryKeywords = {
+  technology: ['tech', 'technology', 'ai', 'artificial intelligence', 'machine learning', 'gadgets', 'software', 'hardware', 'startups', 'apps', 'cybersecurity', 'innovation'],
+  
+  business: ['business', 'stock', 'market', 'startup', 'finance', 'investment', 'trade', 'economy', 'entrepreneur', 'corporate', 'shares', 'crypto', 'bitcoin'],
+  
+  sports: ['sports', 'game', 'match', 'tournament', 'score', 'championship', 'league', 'athlete', 'win', 'draw', 'loss', 'sports update'],
+  
+  entertainment: ['movies', 'celebs', 'entertainment', 'hollywood', 'bollywood', 'tv', 'series', 'netflix', 'celebrity', 'music', 'awards', 'trailer'],
+  
+  health: ['health', 'fitness', 'wellness', 'medicine', 'mental health', 'exercise', 'diet', 'nutrition', 'covid', 'disease', 'therapy', 'doctor'],
+  
+  science: ['science', 'research', 'discovery', 'experiment', 'nasa', 'space', 'astronomy', 'biology', 'physics', 'chemistry', 'climate', 'innovation'],
+  
+  politics: ['politics', 'election', 'government', 'policy', 'minister', 'parliament', 'president', 'vote', 'law', 'debate', 'campaign'],
+  
+  football: ['football', 'ucl', 'premier', 'champions league', 'fifa', 'la liga', 'serie a', 'bundesliga', 'goal', 'soccer', 'messi', 'ronaldo'],
+  
+  cricket: ['cricket', 'ipl', 'world cup', 'odi', 't20', 'test match', 'batsman', 'bowler', 'wicket', 'six', 'run', 'kohli', 'dhoni'],
+  
+  general: ['news', 'update', 'breaking', 'headline', 'top story', 'current affairs', 'latest', 'trending']
+};
+
+
+    if (greetingRegex.test(message)) {
+      aiMessage.innerText = "Hi! What news are you looking for?";
+    } else {
+      const matchedCategory = Object.keys(categoryKeywords).find(cat =>
+        categoryKeywords[cat].some(keyword => message.toLowerCase().includes(keyword))
+      );
+
+      if (matchedCategory) {
+        aiMessage.innerText = `Fetching ${matchedCategory} news...`;
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        const articles = await fetchNewsByCategory(matchedCategory);
+        aiMessage.innerText = "";
+
+        if (!articles.length) {
+          aiMessage.innerText = "Sorry, no news found right now.";
+        } else {
+          articles.slice(0, 3).forEach(article => {
+            const newsDiv = document.createElement("div");
+            newsDiv.innerHTML = `
+              <div style="margin-bottom: 10px;">
+                <strong>${article.title}</strong><br>
+                <a href="${article.url}" target="_blank">Read more</a>
+              </div>
+            `;
+            aiMessage.appendChild(newsDiv);
+          });
+        }
+      } else {
+        aiMessage.innerText = "Sorry, I didn't understand. Try asking about tech, cricket, politics, etc.";
+      }
+    }
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  // Initialize page based on current URL
+  window.onload = function() {
+    const currentPage = window.location.pathname.split('/').pop();
+    if (currentPage === 'favorites.html') {
+      loadFavorites();
+    } else {
+      loadNews();
+    }
+    updateFavoritesCounter();
+  };
+
+
+  <!-- This is the modified renderNewsCard function to include the speaker icon -->
+function renderNewsCard(article, index) {
+  const source = article.source.name;
+  const credibility = credibilityLevels[source] || "Unknown";
+  const isFavorite = isArticleFavorite(article);
+  
+  const articleId = generateArticleId(article);
+  
+  return `
+    <div class="news-card" style="--delay: ${0.1 * index}s" data-article-id="${articleId}">
+      <div class="card-controls">
+        <button class="favorite-btn ${isFavorite ? 'active' : ''}" onclick="handleFavoriteClick(this, ${JSON.stringify(article).replace(/"/g, '&quot;')})">
+          <i class="fas fa-heart"></i>
+        </button>
+        <button class="speak-btn" onclick="speakArticle('${articleId}')">
+          <i class="fas fa-volume-up"></i>
+        </button>
+      </div>
+      <h5>${article.title}</h5>
+      <p><small>${source} 
+        <span class="badge bg-${credibilityColor(credibility)} credibility-badge">${credibility} Credibility</span>
+      </small></p>
+      <p class="article-description">${article.description || "No description available."}</p>
+      <a href="${article.url}" class="btn btn-outline-light btn-sm" target="_blank">Read Full</a>
+    </div>
+  `;
+}
+
+// Add these functions to your JavaScript section
+let currentUtterance = null;
+
+function speakArticle(articleId) {
+  const articleCard = document.querySelector(`[data-article-id="${articleId}"]`);
+  if (!articleCard) return;
+
+  const title = articleCard.querySelector('h5').innerText;
+  const description = articleCard.querySelector('.article-description').innerText;
+  const textToSpeak = `${title}. ${description}`;
+
+  const speakBtn = articleCard.querySelector('.speak-btn');
+
+  // If currently speaking, stop
+  if (window.speechSynthesis.speaking && currentUtterance) {
+    window.speechSynthesis.cancel();
+    speakBtn.classList.remove('speaking');
+    currentUtterance = null;
+    return;
+  }
+
+  // Otherwise, speak
+  currentUtterance = speakText(textToSpeak);
+
+  speakBtn.classList.add('speaking');
+
+  currentUtterance.onend = function () {
+    speakBtn.classList.remove('speaking');
+    currentUtterance = null;
+  };
+}
+
+function speakText(text) {
+  // Cancel any existing speech
+  window.speechSynthesis.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'en-US';
+  utterance.rate = 1;
+  utterance.pitch = 1;
+
+  const voices = window.speechSynthesis.getVoices();
+  const preferredVoice = voices.find(voice => 
+    voice.lang === 'en-US' && voice.name.toLowerCase().includes('female')
+  ) || voices.find(voice => voice.lang === 'en-US');
+
+  if (preferredVoice) {
+    utterance.voice = preferredVoice;
+  }
+
+  window.speechSynthesis.speak(utterance);
+  return utterance;
+}
+
+// Ensure voices are loaded
+if (speechSynthesis.onvoiceschanged !== undefined) {
+  speechSynthesis.onvoiceschanged = function () {
+    speechSynthesis.getVoices();
+  };
+}
+</script>
+
+<!-- Google Translate -->
+<script type="text/javascript">
+  function googleTranslateElementInit() {
+    new google.translate.TranslateElement({pageLanguage: 'en'}, 'google_translate_element');
+  }
+</script>
+<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

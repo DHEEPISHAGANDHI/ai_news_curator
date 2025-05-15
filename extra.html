@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Extras | AI News Curator</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    body {
+      background: url('news.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: white;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: -1;
+    }
+    .extras-section {
+      padding: 40px 0;
+    }
+    .extras-heading {
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 2.2rem;
+      font-weight: bold;
+      color: #ffc107;
+    }
+    .card {
+      background-color: rgba(30, 30, 30, 0.85);
+      color: white;
+      border: none;
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.5);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      height: 100%;
+    }
+    .card:hover {
+      transform: scale(1.02);
+      box-shadow: 0 0 20px rgba(255, 193, 7, 0.5);
+    }
+    .card-title {
+      color: #17e0e0;
+      font-weight: 600;
+    }
+    canvas {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 8px;
+      padding: 10px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    input[type="text"] {
+      background-color: #222;
+      color: white;
+      border: 1px solid #555;
+      border-radius: 5px;
+      padding: 6px 10px;
+      margin-bottom: 10px;
+    }
+    button {
+      margin-top: 5px;
+    }
+    .weather-icon {
+      font-size: 2.5rem;
+      margin: 10px 0;
+      animation-duration: 2s;
+      animation-iteration-count: infinite;
+      display: inline-block;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    @keyframes rotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes fade {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+    .float {
+      animation-name: float;
+    }
+    .rotate {
+      animation-name: rotate;
+    }
+    .fade {
+      animation-name: fade;
+    }
+    .shake {
+      animation-name: shake;
+    }
+    #historyContainer {
+      max-height: 200px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: #ffc107 #333;
+    }
+    #historyContainer::-webkit-scrollbar {
+      width: 8px;
+    }
+    #historyContainer::-webkit-scrollbar-track {
+      background: #333;
+      border-radius: 10px;
+    }
+    #historyContainer::-webkit-scrollbar-thumb {
+      background-color: #ffc107;
+      border-radius: 10px;
+    }
+    .history-item {
+      padding: 8px 0;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
+    }
+    .history-item:last-child {
+      border-bottom: none;
+    }
+    .history-year {
+      font-weight: bold;
+      color: #ffc107;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container extras-section">
+  <h2 class="extras-heading">🌟 Daily Highlights & Insights</h2>
+  <div class="grid">
+    <!-- Weather -->
+    <div class="card">
+      <h5 class="card-title">🌤 Weather</h5>
+      <input type="text" id="weatherLocation" placeholder="Enter city or village..." />
+      <button onclick="loadWeather()" class="btn btn-sm btn-warning">Check Weather</button>
+      <div class="text-center">
+        <div id="weatherIcon" class="weather-icon"></div>
+      </div>
+      <p id="weatherData" class="mt-2">Awaiting input...</p>
+    </div>
+
+    <!-- Quote -->
+    <div class="card">
+      <h5 class="card-title">🧠 Quote of the Day</h5>
+      <p id="quoteData">Generating...</p>
+    </div>
+
+    <!-- Fun Fact -->
+    <div class="card">
+      <h5 class="card-title">🎈 Fun Fact</h5>
+      <p id="factData">Loading...</p>
+    </div>
+
+  
+
+    <!-- Joke -->
+    <div class="card">
+      <h5 class="card-title">😂 Joke of the Day</h5>
+      <p id="jokeData">Loading...</p>
+    </div>
+
+    <!-- Stock Market -->
+    <div class="card">
+      <h5 class="card-title">📈 Stock Market Snapshot</h5>
+      <canvas id="stockChart" height="200"></canvas>
+    </div>
+
+    <!-- Crypto Watch -->
+    <div class="card">
+      <h5 class="card-title">💹 Crypto Watch</h5>
+      <p id="cryptoData">Loading...</p>
+    </div>
+
+    <!-- Horoscope -->
+    <div class="card">
+      <h5 class="card-title">🔮 Horoscope</h5>
+      <select id="horoscopeSign" onchange="generateHoroscope()" class="form-select mb-2">
+        <option disabled selected>Select your sign</option>
+        <option>Aries</option><option>Taurus</option><option>Gemini</option><option>Cancer</option>
+        <option>Leo</option><option>Virgo</option><option>Libra</option><option>Scorpio</option>
+        <option>Sagittarius</option><option>Capricorn</option><option>Aquarius</option><option>Pisces</option>
+      </select>
+      <p id="horoscope">Choose a sign to get your horoscope</p>
+    </div>
+
+    <!-- Riddle -->
+    <div class="card">
+      <h5 class="card-title">🧩 Puzzle of the Day</h5>
+      <p id="puzzleQuestion">Loading...</p>
+      <button onclick="toggleAnswer()" class="btn btn-sm btn-warning">Show/Hide Answer</button>
+      <p id="puzzleAnswer" class="text-info mt-2" style="display:none;"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+  const weatherAPIKey = "086985864c10534cdd48401fa76f0973";
+
+  async function loadWeather() {
+    const city = document.getElementById("weatherLocation").value.trim();
+    if (!city) return alert("Please enter a city or village!");
+    
+    document.getElementById("weatherData").innerText = "Fetching weather...";
+    document.getElementById("weatherIcon").innerHTML = "";
+    
+    try {
+      const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${weatherAPIKey}&units=metric`);
+      const data = await res.json();
+      
+      if (data.cod === "404") {
+        document.getElementById("weatherData").innerText = "Location not found.";
+        return;
+      }
+      
+      const temp = data.main.temp;
+      const condition = data.weather[0].main.toLowerCase();
+      const windSpeed = data.wind.speed;
+      const humidity = data.main.humidity;
+      
+      // Set the weather icon and animation based on condition
+      let icon, animationClass;
+      
+      switch(condition) {
+        case 'clear':
+          icon = '<i class="fas fa-sun" style="color: #FFD700;"></i>';
+          animationClass = 'float';
+          break;
+        case 'clouds':
+          icon = '<i class="fas fa-cloud" style="color: #B0C4DE;"></i>';
+          animationClass = 'float';
+          break;
+        case 'rain':
+        case 'drizzle':
+          icon = '<i class="fas fa-cloud-rain" style="color: #87CEEB;"></i>';
+          animationClass = 'shake';
+          break;
+        case 'thunderstorm':
+          icon = '<i class="fas fa-bolt" style="color: #FFD700;"></i>';
+          animationClass = 'shake';
+          break;
+        case 'snow':
+          icon = '<i class="fas fa-snowflake" style="color: #FFFFFF;"></i>';
+          animationClass = 'float';
+          break;
+        case 'mist':
+        case 'fog':
+        case 'haze':
+          icon = '<i class="fas fa-smog" style="color: #D3D3D3;"></i>';
+          animationClass = 'fade';
+          break;
+        default:
+          icon = '<i class="fas fa-sun" style="color: #FFD700;"></i>';
+          animationClass = 'float';
+      }
+      
+      const weatherIcon = document.getElementById("weatherIcon");
+      weatherIcon.innerHTML = icon;
+      weatherIcon.className = `weather-icon ${animationClass}`;
+      
+      // Display the weather data
+      document.getElementById("weatherData").innerHTML = 
+        `🌡 ${temp.toFixed(1)}°C, ${data.weather[0].description}<br>
+         💨 Wind: ${windSpeed} m/s<br>
+         💧 Humidity: ${humidity}%`;
+      
+    } catch (error) {
+      document.getElementById("weatherData").innerText = "Unable to fetch weather.";
+      console.error("Weather error:", error);
+    }
+  }
+
+  const aiQuotes = [
+  "Success doesn't come to you. You go to it. – Marva Collins",
+  "Dream big, start small, act now. – Robin Sharma",
+  "Your future is created by what you do today, not tomorrow. – Robert Kiyosaki",
+  "In the middle of difficulty lies opportunity. – Albert Einstein",
+  "The only limit to your impact is your imagination and commitment. – Tony Robbins",
+  "Believe you can and you're halfway there. – Theodore Roosevelt",
+  "Don't watch the clock; do what it does. Keep going. – Sam Levenson",
+  "Success is not final, failure is not fatal: It is the courage to continue that counts. – Winston Churchill",
+  "Hard work beats talent when talent doesn't work hard. – Tim Notke",
+  "Push yourself, because no one else is going to do it for you. – Unknown",
+  "Great things never come from comfort zones. – Unknown",
+  "Discipline is the bridge between goals and accomplishment. – Jim Rohn",
+  "Opportunities don't happen. You create them. – Chris Grosser",
+  "Success usually comes to those who are too busy to be looking for it. – Henry David Thoreau",
+  "What you get by achieving your goals is not as important as what you become by achieving your goals. – Zig Ziglar",
+  "Strive not to be a success, but rather to be of value. – Albert Einstein",
+  "If you're going through hell, keep going. – Winston Churchill",
+  "Act as if what you do makes a difference. It does. – William James",
+  "Do what you can, with what you have, where you are. – Theodore Roosevelt",
+  "The future belongs to those who believe in the beauty of their dreams. – Eleanor Roosevelt",
+  "You miss 100% of the shots you don't take. – Wayne Gretzky",
+  "Whether you think you can or you think you can't, you're right. – Henry Ford",
+  "I am not a product of my circumstances. I am a product of my decisions. – Stephen R. Covey",
+  "Everything you've ever wanted is on the other side of fear. – George Addair",
+  "Start where you are. Use what you have. Do what you can. – Arthur Ashe",
+  "Don't wait. The time will never be just right. – Napoleon Hill",
+  "It does not matter how slowly you go as long as you do not stop. – Confucius",
+  "Failure will never overtake me if my determination to succeed is strong enough. – Og Mandino",
+  "The only way to do great work is to love what you do. – Steve Jobs",
+  "Success is the sum of small efforts, repeated day-in and day-out. – Robert Collier",
+  "Be yourself; everyone else is already taken. – Oscar Wilde",
+  "Do not go where the path may lead, go instead where there is no path and leave a trail. – Ralph Waldo Emerson",
+  "Perseverance is not a long race; it is many short races one after the other. – Walter Elliot",
+  "What lies behind us and what lies before us are tiny matters compared to what lies within us. – Ralph Waldo Emerson",
+  "Keep your eyes on the stars and your feet on the ground. – Theodore Roosevelt",
+  "Success seems to be connected with action. Successful people keep moving. – Conrad Hilton",
+  "There are no shortcuts to any place worth going. – Beverly Sills",
+  "You don't have to be great to start, but you have to start to be great. – Zig Ziglar",
+  "It always seems impossible until it's done. – Nelson Mandela",
+  "If you can dream it, you can do it. – Walt Disney"
+];
+
+
+  const puzzles = [
+  { question: "I have keys but no locks. I have space but no room. You can enter but can't go outside. What am I?", answer: "A Keyboard" },
+  { question: "What has to be broken before you can use it?", answer: "An Egg" },
+  { question: "What goes up but never comes down?", answer: "Your Age" },
+  { question: "I speak without a mouth and hear without ears. What am I?", answer: "An Echo" },
+  { question: "What can travel around the world while staying in a corner?", answer: "A Stamp" },
+  { question: "What has a heart that doesn't beat?", answer: "An Artichoke" },
+  { question: "The more you take, the more you leave behind. What am I?", answer: "Footsteps" },
+  { question: "What begins with T, ends with T, and has T in it?", answer: "A Teapot" },
+  { question: "What gets wetter the more it dries?", answer: "A Towel" },
+  { question: "What can fill a room but takes up no space?", answer: "Light" },
+  { question: "What has hands but can't clap?", answer: "A Clock" },
+  { question: "What has one eye but can't see?", answer: "A Needle" },
+  { question: "I'm tall when I'm young, and I'm short when I'm old. What am I?", answer: "A Candle" },
+  { question: "What has many teeth but can't bite?", answer: "A Comb" },
+  { question: "What is full of holes but still holds water?", answer: "A Sponge" },
+  { question: "What has a neck but no head?", answer: "A Bottle" },
+  { question: "Forward I'm heavy, but backward I'm not. What am I?", answer: "The word 'Ton'" },
+  { question: "What invention lets you look right through a wall?", answer: "A Window" },
+  { question: "What comes once in a minute, twice in a moment, but never in a thousand years?", answer: "The letter 'M'" },
+  { question: "What can't talk but will reply when spoken to?", answer: "An Echo" },
+  { question: "What has legs but doesn't walk?", answer: "A Table" },
+  { question: "What runs but never walks, has a bed but never sleeps?", answer: "A River" },
+  { question: "I shave every day, but my beard stays the same. Who am I?", answer: "A Barber" },
+  { question: "What comes down but never goes up?", answer: "Rain" },
+  { question: "What is always in front of you but can't be seen?", answer: "The Future" },
+  { question: "What can you catch but not throw?", answer: "A Cold" },
+  { question: "Where does today come before yesterday?", answer: "In a Dictionary" },
+  { question: "What can't be put in a saucepan?", answer: "Its Lid" },
+  { question: "What building has the most stories?", answer: "The Library" },
+  { question: "What word is spelled incorrectly in every dictionary?", answer: "Incorrectly" }
+];
+
+
+  function loadQuote() {
+    const quote = aiQuotes[Math.floor(Math.random() * aiQuotes.length)];
+    document.getElementById("quoteData").innerText = `💬 "${quote}"`;
+  }
+
+  function loadPuzzle() {
+    const randomPuzzle = puzzles[Math.floor(Math.random() * puzzles.length)];
+    document.getElementById("puzzleQuestion").innerText = `🧠 ${randomPuzzle.question}`;
+    document.getElementById("puzzleAnswer").innerText = randomPuzzle.answer;
+    document.getElementById("puzzleAnswer").style.display = "none";
+  }
+
+  function toggleAnswer() {
+    const ans = document.getElementById("puzzleAnswer");
+    ans.style.display = ans.style.display === "none" ? "block" : "none";
+  }
+
+  async function loadFact() {
+    try {
+      const res = await fetch("https://uselessfacts.jsph.pl/random.json?language=en");
+      const data = await res.json();
+      document.getElementById("factData").innerText = data.text;
+    } catch (error) {
+      document.getElementById("factData").innerText = "Unable to load a fact at this time.";
+      console.error("Fact error:", error);
+    }
+  }
+
+  async function loadHistory() {
+    try {
+      // Get current date for history API
+      const now = new Date();
+      const month = now.getMonth() + 1; // JavaScript months are 0-indexed
+      const day = now.getDate();
+      
+      // Clear loading message and show loading state
+      document.getElementById("historyContainer").innerHTML = '<p>Fetching historical events...</p>';
+      
+      // Alternative history API approach
+      const response = await fetch(`https://today.zenquotes.io/api/events`);
+      
+      if (!response.ok) {
+        throw new Error(`API responded with status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      // Check if we got valid data
+      if (!data || !data.data || data.data.Events.length === 0) {
+        throw new Error("No events data received");
+      }
+      
+      // Create HTML for history items
+      let historyHTML = '';
+      
+      // Get 5 random events
+      const allEvents = data.data.Events;
+      const randomEvents = [];
+      
+      // Get 5 random events without duplicates
+      for (let i = 0; i < 5 && allEvents.length > 0; i++) {
+        const randomIndex = Math.floor(Math.random() * allEvents.length);
+        randomEvents.push(allEvents[randomIndex]);
+        allEvents.splice(randomIndex, 1);
+      }
+      
+      randomEvents.forEach(event => {
+        historyHTML += `
+          <div class="history-item">
+            <span class="history-year">${event.year}</span> - ${event.text}
+          </div>
+        `;
+      });
+      
+      // Display history events
+      document.getElementById("historyContainer").innerHTML = historyHTML;
+      
+    } catch (error) {
+      console.error("History API error:", error);
+      
+      // Fallback to static data if API fails
+      const fallbackEvents = [
+        { year: 1912, text: "The Titanic sank in the North Atlantic Ocean." },
+        { year: 1865, text: "Abraham Lincoln died after being shot the previous evening." },
+        { year: 1955, text: "The first McDonald's franchise restaurant opened in Des Plaines, Illinois." },
+        { year: 1947, text: "Jackie Robinson became the first African American to play in Major League Baseball." },
+        { year: 2013, text: "The Boston Marathon bombing occurred." }
+      ];
+      
+      let historyHTML = '<div class="alert alert-warning mb-2" style="font-size: 0.8rem; padding: 5px 10px;">API unavailable - showing sample data</div>';
+      
+      fallbackEvents.forEach(event => {
+        historyHTML += `
+          <div class="history-item">
+            <span class="history-year">${event.year}</span> - ${event.text}
+          </div>
+        `;
+      });
+      
+      document.getElementById("historyContainer").innerHTML = historyHTML;
+    }
+  }
+
+  async function loadJoke() {
+    try {
+      const res = await fetch("https://v2.jokeapi.dev/joke/Any?type=single");
+      const data = await res.json();
+      document.getElementById("jokeData").innerText = data.joke;
+    } catch (error) {
+      document.getElementById("jokeData").innerText = "Why did the joke fail to load? It was too busy crashing!";
+      console.error("Joke error:", error);
+    }
+  }
+
+  async function loadCrypto() {
+    try {
+      const res = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_market_cap=true&include_24hr_change=true");
+      const data = await res.json();
+      document.getElementById("cryptoData").innerHTML = `
+        <strong>Bitcoin (BTC)</strong><br>
+        💲 Price: $${data.bitcoin.usd.toLocaleString()}<br>
+        📈 24h Change: ${data.bitcoin.usd_24h_change.toFixed(2)}%<br><br>
+        <strong>Ethereum (ETH)</strong><br>
+        💲 Price: $${data.ethereum.usd.toLocaleString()}<br>
+        📈 24h Change: ${data.ethereum.usd_24h_change.toFixed(2)}%
+      `;
+    } catch (error) {
+      document.getElementById("cryptoData").innerText = "Unable to load crypto data at this time.";
+      console.error("Crypto error:", error);
+    }
+  }
+
+  function generateHoroscope() {
+    const sign = document.getElementById("horoscopeSign").value;
+    const horoscopes = [
+      `Today is a day for growth, ${sign}. Embrace opportunities and connect with people around you.`,
+      `As a ${sign}, your energy will attract positivity. Stay confident and keep moving forward.`,
+      `${sign}, challenges may arise, but your wisdom will lead you to success.`,
+      `Take a break today, ${sign}. Reflect on your journey and plan your next steps wisely.`,
+      `${sign}, your intuition is sharp today. Trust your instincts in personal and professional decisions.`
+    ];
+    const msg = horoscopes[Math.floor(Math.random() * horoscopes.length)];
+    document.getElementById("horoscope").innerText = msg;
+  }
+
+  function drawStockChart() {
+    const ctx = document.getElementById('stockChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+        datasets: [{
+          label: 'NIFTY 50',
+          data: [21985, 22020, 22100, 22010, 22150],
+          borderColor: '#ffc107',
+          backgroundColor: 'rgba(255, 193, 7, 0.2)',
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: {
+        plugins: {
+          legend: { labels: { color: 'white' } }
+        },
+        scales: {
+          x: { ticks: { color: '#ccc' }, grid: { color: '#444' } },
+          y: { ticks: { color: '#ccc' }, grid: { color: '#444' } }
+        }
+      }
+    });
+  }
+
+  window.onload = () => {
+    loadQuote();
+    loadFact();
+    loadHistory();
+    loadJoke();
+    loadCrypto();
+    drawStockChart();
+    loadPuzzle();
+  };
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

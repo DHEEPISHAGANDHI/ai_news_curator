@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fake News Detector | AI News Curator</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Special+Gothic+Condensed+One&display=swap');
+    body {
+      background: url('news.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: white;
+      font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+      position: relative;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.75);
+      z-index: -1;
+    }
+    .navbar {
+      background-color: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+    }
+    .news-card {
+      background-color: rgba(31, 31, 31, 0.95);
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.6);
+      transition: transform 0.3s ease;
+      opacity: 0;
+      animation: fadeUp 0.6s ease forwards;
+      animation-delay: var(--delay, 0s);
+      cursor: pointer;
+    }
+    .news-card:hover {
+      transform: scale(1.01);
+    }
+    .news-card h5 {
+      color: #1578e9;
+      font-family: Special Gothic Condensed One;
+      font-size: 25px;
+      font-weight: 500;
+    }
+    .credibility-badge {
+      font-size: 0.8rem;
+    }
+    .category-section {
+      margin-top: 40px;
+      animation: fadeUp 0.8s ease forwards;
+    }
+    .category-title {
+      border-left: 5px solid #999;
+      padding-left: 10px;
+      margin-bottom: 20px;
+      font-weight: 600;
+      color: #ffa200;
+    }
+    .filtered-heading {
+      color: #ffb347 !important;
+    }
+    h2.text-center {
+      color: #ffffff;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    #detailModal .modal-content {
+      background-color: rgba(31, 31, 31, 0.95);
+      color: white;
+    }
+    #detailModal .modal-header {
+      border-bottom: 1px solid #444;
+    }
+    #detailModal .modal-footer {
+      border-top: 1px solid #444;
+    }
+    .credibility-meter {
+      height: 8px;
+      width: 100%;
+      background-color: #444;
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 10px 0;
+    }
+    .credibility-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 1s ease;
+    }
+    .analysis-point {
+      background-color: rgba(0, 0, 0, 0.3);
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+    .analysis-point i {
+      margin-right: 5px;
+    }
+    .credibility-breakdown {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 15px;
+    }
+    .credibility-factor {
+      text-align: center;
+      flex: 1;
+    }
+    .credibility-factor .value {
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+    .loading-spinner {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 200px;
+    }
+    .loading-spinner div {
+      width: 40px;
+      height: 40px;
+      border: 5px solid rgba(255, 255, 255, 0.2);
+      border-top: 5px solid #ffa200;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .check-credibility-btn {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top shadow-sm">
+  <div class="container-fluid">
+    <a class="navbar-brand fw-bold" href="#">Fake News Detector</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+      <ul class="navbar-nav me-3">
+        <li class="nav-item"><a class="nav-link" href="news.html">News</a></li>
+        <li class="nav-item"><a class="nav-link" href="summarize.html">Summarizer</a></li>
+        <li class="nav-item"><a class="nav-link" href="emote.html">Sentiment</a></li>
+      </ul>
+      <div class="dropdown">
+        <button class="btn btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+          Filter by Topic
+        </button>
+        <ul class="dropdown-menu dropdown-menu-dark">
+          <li><a class="dropdown-item" href="#" onclick="filterBy('general')">General</a></li>
+          <li><a class="dropdown-item" href="#" onclick="filterBy('technology')">Technology</a></li>
+          <li><a class="dropdown-item" href="#" onclick="filterBy('business')">Business</a></li>
+          <li><a class="dropdown-item" href="#" onclick="filterBy('health')">Health</a></li>
+          <li><a class="dropdown-item" href="#" onclick="filterBy('science')">Science</a></li>
+          <li><a class="dropdown-item" href="#" onclick="filterBy('sports')">Sports</a></li>
+          <li><a class="dropdown-item" href="#" onclick="filterBy('entertainment')">Entertainment</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container py-5">
+  <h2 class="text-center mb-4">Check News Credibility</h2>
+  <div id="newsContent">
+    <div class="loading-spinner">
+      <div></div>
+    </div>
+  </div>
+</div>
+
+<!-- News Detail Modal -->
+<div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="newsTitle">News Title</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="text-center mb-4">
+          <h2 id="verdictText">Analyzing...</h2>
+          <div class="credibility-meter">
+            <div class="credibility-fill" id="credibilityFill"></div>
+          </div>
+          <h4>Credibility Score: <span id="credibilityScore">0</span>%</h4>
+        </div>
+        
+        <div class="credibility-breakdown mb-4">
+          <div class="credibility-factor">
+            <div class="value" id="sourceScore">0%</div>
+            <div class="label">Source</div>
+          </div>
+          <div class="credibility-factor">
+            <div class="value" id="contentScore">0%</div>
+            <div class="label">Content</div>
+          </div>
+          <div class="credibility-factor">
+            <div class="value" id="languageScore">0%</div>
+            <div class="label">Language</div>
+          </div>
+          <div class="credibility-factor">
+            <div class="value" id="factScore">0%</div>
+            <div class="label">Facts</div>
+          </div>
+        </div>
+        
+        <h5 class="mb-3">Analysis</h5>
+        <div id="analysisPoints"></div>
+        
+        <h5 class="mt-4 mb-3">Original Article</h5>
+        <p id="newsContent">Article content goes here...</p>
+        <p><small>Source: <span id="newsSource">Source Name</span></small></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary">Full Report</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // API key for News API
+  const apiKey = "e2561402e840486aa86e56f2fe6f0681";
+  
+  // Store fetched articles globally so we can access them when checking credibility
+  let currentArticles = [];
+  
+  // Credibility levels for known sources
+  const credibilityLevels = {
+    "BBC News": "High", "CNN": "Moderate", "Fox News": "Low", "The Verge": "Moderate",
+    "Al Jazeera English": "High", "NDTV": "Moderate", "Sky Sports": "High", "ESPN": "High",
+    "Reuters": "High", "The Guardian": "High", "Hindustan Times": "Moderate", "Times of India": "Moderate",
+    "New York Times": "High", "Washington Post": "High", "Associated Press": "High", "Bloomberg": "High",
+    "CNBC": "Moderate", "Forbes": "Moderate", "TechCrunch": "Moderate", "Ars Technica": "High",
+    "Engadget": "Moderate", "Wired": "High", "Business Insider": "Moderate"
+  };
+
+  // Fetch news from News API based on category
+  async function fetchNewsByCategory(category) {
+    try {
+      const url = `https://newsapi.org/v2/top-headlines?category=${category}&language=en&pageSize=10&apiKey=${apiKey}`;
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (data.status !== "ok") {
+        throw new Error("Failed to fetch news");
+      }
+      
+      currentArticles = data.articles;
+      return data.articles;
+    } catch (error) {
+      console.error("Error fetching news:", error);
+      return [];
+    }
+  }
+
+  // Initial load of general news
+  async function loadNews() {
+    const content = document.getElementById("newsContent");
+    content.innerHTML = `
+      <div class="loading-spinner">
+        <div></div>
+      </div>
+    `;
+    
+    try {
+      const articles = await fetchNewsByCategory("general");
+      displayNews(articles, "General");
+    } catch (error) {
+      content.innerHTML = `<div class="alert alert-danger">Failed to load news. Please try again later.</div>`;
+    }
+  }
+
+  // Display news articles
+  function displayNews(articles, category) {
+    const content = document.getElementById("newsContent");
+    content.innerHTML = "";
+    
+    if (!articles || articles.length === 0) {
+      content.innerHTML = `<div class="alert alert-warning">No news found for ${category}.</div>`;
+      return;
+    }
+    
+    const section = document.createElement("div");
+    section.classList.add("category-section");
+    
+    const heading = document.createElement("h4");
+    heading.className = "category-title";
+    heading.innerText = category.charAt(0).toUpperCase() + category.slice(1);
+    section.appendChild(heading);
+    
+    articles.forEach((article, index) => {
+      if (!article.title || !article.description) return;
+      
+      const source = article.source.name;
+      const credibility = credibilityLevels[source] || "Unknown";
+      
+      const card = document.createElement("div");
+      card.className = "news-card";
+      card.style = `--delay: ${0.1 * index}s`;
+      card.innerHTML = `
+        <h5>${article.title}</h5>
+        <p><small>${source} 
+          <span class="badge bg-${credibilityColor(credibility)} credibility-badge">${credibility} Credibility</span>
+        </small></p>
+        <p>${article.description || "No description available."}</p>
+        <div class="d-flex justify-content-between">
+          <a href="${article.url}" class="btn btn-outline-light btn-sm" target="_blank">Read Full</a>
+          <button class="btn btn-warning btn-sm check-credibility-btn" onclick="checkCredibility(${index})">Check Credibility</button>
+        </div>
+      `;
+      
+      section.appendChild(card);
+    });
+    
+    content.appendChild(section);
+  }
+
+  // Filter news by category
+  async function filterBy(category) {
+    const content = document.getElementById("newsContent");
+    content.innerHTML = `
+      <div class="loading-spinner">
+        <div></div>
+      </div>
+    `;
+    
+    try {
+      const articles = await fetchNewsByCategory(category);
+      const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
+      displayNews(articles, `${categoryName} (Filtered)`);
+    } catch (error) {
+      content.innerHTML = `<div class="alert alert-danger">Failed to load ${category} news. Please try again later.</div>`;
+    }
+  }
+
+  // Check credibility of a news article
+  function checkCredibility(index) {
+    const article = currentArticles[index];
+    if (!article) return;
+    
+    // Set modal content
+    document.getElementById("newsTitle").innerText = article.title;
+    document.getElementById("newsContent").innerText = article.content || article.description;
+    document.getElementById("newsSource").innerText = article.source.name;
+    
+    // Reset credibility indicators
+    document.getElementById("verdictText").innerText = "Analyzing...";
+    document.getElementById("credibilityScore").innerText = "0";
+    document.getElementById("credibilityFill").style.width = "0%";
+    document.getElementById("credibilityFill").className = "credibility-fill";
+    document.getElementById("sourceScore").innerText = "0%";
+    document.getElementById("contentScore").innerText = "0%";
+    document.getElementById("languageScore").innerText = "0%";
+    document.getElementById("factScore").innerText = "0%";
+    document.getElementById("analysisPoints").innerHTML = `
+      <div class="analysis-point">
+        <i class="fas fa-spinner fa-spin"></i> Analyzing the article...
+      </div>
+    `;
+    
+    // Show the modal
+    const modal = new bootstrap.Modal(document.getElementById("detailModal"));
+    modal.show();
+    
+    // Simulate credibility analysis (in a real app, this would be an API call)
+    setTimeout(() => {
+      analyzeCredibility(article);
+    }, 1500);
+  }
+
+  // Simulate credibility analysis
+  function analyzeCredibility(article) {
+    // Generate "credibility" scores based on the source name and content
+    const source = article.source.name;
+    const sourceCredibility = credibilityLevels[source] || "Unknown";
+    
+    // Base credibility score on the known source credibility
+    let credibilityScore = 0;
+    switch (sourceCredibility) {
+      case "High": 
+        credibilityScore = 85 + Math.floor(Math.random() * 15);
+        break;
+      case "Moderate": 
+        credibilityScore = 60 + Math.floor(Math.random() * 25);
+        break;
+      case "Low": 
+        credibilityScore = 30 + Math.floor(Math.random() * 30);
+        break;
+      default: 
+        credibilityScore = 40 + Math.floor(Math.random() * 40);
+    }
+    
+    // Add some randomness to make it more interesting
+    const sourceScore = Math.min(100, Math.max(0, credibilityScore - 10 + Math.floor(Math.random() * 20)));
+    const contentScore = Math.min(100, Math.max(0, credibilityScore - 15 + Math.floor(Math.random() * 30)));
+    const languageScore = Math.min(100, Math.max(0, credibilityScore - 5 + Math.floor(Math.random() * 10)));
+    const factScore = Math.min(100, Math.max(0, credibilityScore - 20 + Math.floor(Math.random() * 40)));
+    
+    // Generate verdict
+    let verdict = "Unverified";
+    if (credibilityScore >= 80) {
+      verdict = "Real";
+    } else if (credibilityScore >= 60) {
+      verdict = "Mostly True";
+    } else if (credibilityScore >= 40) {
+      verdict = "Mixed";
+    } else if (credibilityScore >= 20) {
+      verdict = "Mostly False";
+    } else {
+      verdict = "Fake";
+    }
+    
+    // Generate analysis points
+    const analysisPoints = [];
+    
+    // Source analysis
+    if (sourceScore >= 80) {
+      analysisPoints.push("Source has a strong reputation for accuracy and fact-checking");
+    } else if (sourceScore >= 60) {
+      analysisPoints.push("Source generally reports accurately but has some bias");
+    } else if (sourceScore >= 40) {
+      analysisPoints.push("Source has mixed reputation for accuracy");
+    } else {
+      analysisPoints.push("Source has a history of publishing misleading information");
+    }
+    
+    // Content analysis
+    if (contentScore >= 80) {
+      analysisPoints.push("Content presents multiple perspectives and cites evidence");
+    } else if (contentScore >= 60) {
+      analysisPoints.push("Content provides some context but may emphasize certain viewpoints");
+    } else if (contentScore >= 40) {
+      analysisPoints.push("Content lacks sufficient context or balance");
+    } else {
+      analysisPoints.push("Content appears to be misleading or exaggerated");
+    }
+    
+    // Language analysis
+    if (languageScore >= 80) {
+      analysisPoints.push("Language is objective and avoids emotional manipulation");
+    } else if (languageScore >= 60) {
+      analysisPoints.push("Language is mostly neutral with some emotional elements");
+    } else if (languageScore >= 40) {
+      analysisPoints.push("Language contains potentially misleading phrases or sensationalism");
+    } else {
+      analysisPoints.push("Language is highly emotional and designed to provoke strong reactions");
+    }
+    
+    // Fact analysis
+    if (factScore >= 80) {
+      analysisPoints.push("Facts presented appear to be accurate and verifiable");
+    } else if (factScore >= 60) {
+      analysisPoints.push("Most facts appear accurate but may lack complete context");
+    } else if (factScore >= 40) {
+      analysisPoints.push("Some facts are questionable or presented out of context");
+    } else {
+      analysisPoints.push("Contains claims that contradict verified information");
+    }
+    
+    // Add additional analysis based on specific keywords
+    const contentText = (article.content || article.description || "").toLowerCase();
+    const titleText = (article.title || "").toLowerCase();
+    const fullText = contentText + " " + titleText;
+    
+    if (fullText.includes("exclusive") || fullText.includes("breaking")) {
+      analysisPoints.push("Uses 'exclusive' or 'breaking' which can sometimes indicate rush to publish without verification");
+    }
+    
+    if (fullText.includes("sources say") || fullText.includes("reportedly") || fullText.includes("allegedly")) {
+      analysisPoints.push("Article relies on unnamed sources or hedging language");
+    }
+    
+    if (contentText.length < 100 && article.content) {
+      analysisPoints.push("Article is unusually short with limited details");
+    }
+    
+    // Update the modal with analysis results
+    document.getElementById("verdictText").innerText = `Verdict: ${verdict}`;
+    document.getElementById("credibilityScore").innerText = credibilityScore;
+    
+    const credibilityFill = document.getElementById("credibilityFill");
+    credibilityFill.style.width = `${credibilityScore}%`;
+    
+    // Set color based on score
+    if (credibilityScore >= 80) {
+      credibilityFill.className = "credibility-fill bg-success";
+    } else if (credibilityScore >= 60) {
+      credibilityFill.className = "credibility-fill bg-info";
+    } else if (credibilityScore >= 40) {
+      credibilityFill.className = "credibility-fill bg-warning";
+    } else {
+      credibilityFill.className = "credibility-fill bg-danger";
+    }
+    
+    document.getElementById("sourceScore").innerText = `${sourceScore}%`;
+    document.getElementById("contentScore").innerText = `${contentScore}%`;
+    document.getElementById("languageScore").innerText = `${languageScore}%`;
+    document.getElementById("factScore").innerText = `${factScore}%`;
+    
+    const analysisHTML = analysisPoints.map(point => 
+      `<div class="analysis-point"><i class="fas fa-check-circle"></i> ${point}</div>`
+    ).join("");
+    
+    document.getElementById("analysisPoints").innerHTML = analysisHTML;
+  }
+
+  // Helper function to determine badge color based on credibility
+  function credibilityColor(level) {
+    switch (level) {
+      case "High": return "success";
+      case "Moderate": return "warning";
+      case "Low": return "danger";
+      default: return "secondary";
+    }
+  }
+
+  // Load news when page loads
+  window.onload = loadNews;
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+</body>
+</html>

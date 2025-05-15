@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Echo Mode - News Déjà Vu</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Special+Gothic+Condensed+One&display=swap');
+        
+        body {
+            background: url('news.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+            position: relative;
+        }
+        
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: -1;
+        }
+        
+        .navbar {
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+        }
+        
+        .news-card {
+            background-color: rgba(31, 31, 31, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.6);
+            transition: transform 0.3s ease;
+            opacity: 0;
+            animation: fadeUp 0.6s ease forwards;
+            animation-delay: var(--delay, 0s);
+        }
+        
+        .news-card:hover {
+            transform: scale(1.01);
+        }
+        
+        .news-card h3 {
+            color: #1578e9;
+            font-family: 'Special Gothic Condensed One', sans-serif;
+            font-size: 25px;
+            font-weight: 500;
+        }
+        
+        .category-section {
+            margin-top: 40px;
+            animation: fadeUp 0.8s ease forwards;
+        }
+        
+        .category-title {
+            border-left: 5px solid #999;
+            padding-left: 10px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            color: #ffa200;
+        }
+        
+        .category-pill {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .loader {
+            border-top-color: #3498db;
+            animation: spinner 1.5s linear infinite;
+        }
+        
+        .speaker-btn {
+            cursor: pointer;
+            background-color: rgba(21, 120, 233, 0.2);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        
+        .speaker-btn:hover {
+            background-color: rgba(21, 120, 233, 0.4);
+        }
+        
+        .speaker-btn.speaking {
+            background-color: rgba(21, 120, 233, 0.6);
+        }
+        
+        @keyframes spinner {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar sticky-top shadow-sm">
+        <div class="container mx-auto py-4 px-4">
+            <h1 class="text-3xl font-bold">Echo Mode News</h1>
+            <p class="mt-2 opacity-90">Finding patterns in today's headlines</p>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-8">
+        <!-- Actions Bar -->
+        <div class="mb-8">
+            <h2 class="text-xl font-semibold text-white">Today's Headlines & Similar Stories</h2>
+            <div class="flex gap-2">
+                <select id="countrySelect" class="bg-gray-800 text-white border border-gray-700 rounded px-3 py-2">
+                    <option value="us">United States</option>
+                    <option value="gb">United Kingdom</option>
+                    <option value="ca">Canada</option>
+                    <option value="au">Australia</option>
+                    <option value="in">India</option>
+                    <option value="fr">France</option>
+                    <option value="de">Germany</option>
+                </select>
+                <button id="fetchButton" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded transition">Refresh Headlines</button>
+            </div>
+            <!-- Updated API key input -->
+            <input type="hidden" id="apiKey" value="c08eb8f5f0a44b4391103620bc2952d8">
+        </div>
+
+        <!-- Category Filters -->
+        <div class="mb-8 animation-fadeUp">
+            <h2 class="text-xl font-semibold mb-4 text-ffa200">Filter by Category</h2>
+            <div class="flex flex-wrap gap-2">
+                <button class="category-filter bg-gray-800 text-white hover:bg-gray-700 category-pill" data-category="all">All</button>
+                <button class="category-filter bg-green-900 text-green-200 hover:bg-green-800 category-pill" data-category="politics">Politics</button>
+                <button class="category-filter bg-red-900 text-red-200 hover:bg-red-800 category-pill" data-category="technology">Technology</button>
+                <button class="category-filter bg-purple-900 text-purple-200 hover:bg-purple-800 category-pill" data-category="science">Science</button>
+                <button class="category-filter bg-yellow-900 text-yellow-200 hover:bg-yellow-800 category-pill" data-category="sports">Sports</button>
+                <button class="category-filter bg-indigo-900 text-indigo-200 hover:bg-indigo-800 category-pill" data-category="entertainment">Entertainment</button>
+                <button class="category-filter bg-pink-900 text-pink-200 hover:bg-pink-800 category-pill" data-category="health">Health</button>
+                <button class="category-filter bg-gray-900 text-gray-200 hover:bg-gray-800 category-pill" data-category="business">Business</button>
+            </div>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loading" class="hidden flex justify-center my-12">
+            <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12"></div>
+        </div>
+
+        <!-- Error Message -->
+        <div id="errorMessage" class="hidden bg-red-900 border-l-4 border-red-500 text-red-200 p-4 mb-8" role="alert">
+            <p class="font-bold">Error</p>
+            <p id="errorText">Something went wrong while fetching news. Please try again later.</p>
+        </div>
+
+        <!-- News Container -->
+        <div id="newsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Content will be dynamically added here -->
+        </div>
+    </div>
+
+    <script>
+        // Global variable to store all fetched articles
+        let allArticles = [];
+        // Global variable for speech synthesis
+        let currentlySpeaking = null;
+        
+        // Function to categorize news articles based on keywords
+        function categorizeArticle(article) {
+            const title = article.title?.toLowerCase() || '';
+            const description = article.description?.toLowerCase() || '';
+            const content = article.content?.toLowerCase() || '';
+            const combinedText = title + ' ' + description + ' ' + content;
+            
+            const categoryKeywords = {
+                politics: ['president', 'government', 'election', 'vote', 'congress', 'senate', 'democrat', 'republican', 'parliament', 'policy', 'political', 'minister', 'administration', 'campaign', 'candidate', 'trump', 'biden'],
+                technology: ['tech', 'technology', 'software', 'hardware', 'app', 'digital', 'internet', 'ai', 'artificial intelligence', 'computer', 'cyber', 'robot', 'innovation', 'startup', 'gadget', 'silicon valley'],
+                science: ['science', 'scientific', 'research', 'discovery', 'space', 'nasa', 'physics', 'chemistry', 'biology', 'quantum', 'study', 'experiment', 'scientist', 'astronomy', 'gene', 'species'],
+                sports: ['sport', 'game', 'team', 'player', 'championship', 'tournament', 'match', 'league', 'athlete', 'coach', 'basketball', 'football', 'soccer', 'baseball', 'tennis', 'olympic'],
+                entertainment: ['movie', 'film', 'actor', 'actress', 'hollywood', 'music', 'singer', 'celebrity', 'star', 'album', 'award', 'performance', 'director', 'entertainment', 'tv', 'show'],
+                health: ['health', 'medical', 'doctor', 'hospital', 'disease', 'patient', 'treatment', 'drug', 'therapy', 'vaccine', 'virus', 'pandemic', 'medicine', 'healthcare', 'illness', 'symptoms'],
+                business: ['business', 'economic', 'economy', 'market', 'stock', 'investor', 'company', 'industry', 'corporate', 'trade', 'financial', 'finance', 'investment', 'ceo', 'revenue', 'profit']
+            };
+            
+            // Check each category's keywords
+            for (const [category, keywords] of Object.entries(categoryKeywords)) {
+                for (const keyword of keywords) {
+                    if (combinedText.includes(keyword)) {
+                        return category;
+                    }
+                }
+            }
+            
+            // Default category if no matches found
+            return 'other';
+        }
+
+        // Function to find similar news articles based on keywords and category
+        function findSimilarArticles(currentArticle, allArticles, category) {
+            // Skip if this is the current article
+            const filteredArticles = allArticles.filter(article => 
+                article.title !== currentArticle.title && 
+                categorizeArticle(article) === category
+            );
+            
+            if (filteredArticles.length === 0) {
+                return [];
+            }
+            
+            // Extract keywords from the current article
+            const title = currentArticle.title?.toLowerCase() || '';
+            const description = currentArticle.description?.toLowerCase() || '';
+            
+            // List of common words to ignore when comparing
+            const stopWords = ['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'with', 'by', 'about', 'as', 'of', 'from'];
+            
+            // Get important words from the current article
+            const words = (title + ' ' + description).split(/\s+/)
+                .map(word => word.replace(/[^\w]/g, '').toLowerCase())
+                .filter(word => word.length > 3 && !stopWords.includes(word));
+            
+            // Score other articles based on word matches
+            const scoredArticles = filteredArticles.map(article => {
+                const otherText = (article.title + ' ' + article.description).toLowerCase();
+                let score = 0;
+                
+                words.forEach(word => {
+                    if (otherText.includes(word)) {
+                        score += 1;
+                    }
+                });
+                
+                return { article, score };
+            });
+            
+            // Sort by score and take top 2
+            const sortedArticles = scoredArticles
+                .sort((a, b) => b.score - a.score)
+                .slice(0, 2)
+                .filter(item => item.score > 0)
+                .map(item => item.article);
+            
+            return sortedArticles;
+        }
+        
+        // Function to fetch news from multiple endpoints to create a larger dataset
+        async function fetchNews(apiKey) {
+            if (!apiKey) {
+                showError("API key is missing. Please reload the page or contact support.");
+                return;
+            }
+            
+            const country = document.getElementById('countrySelect').value;
+            
+            // Show loading indicator
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('errorMessage').classList.add('hidden');
+            document.getElementById('newsContainer').innerHTML = '';
+            
+            try {
+                allArticles = []; // Reset global articles array
+                
+                // Get top headlines from selected country
+                const headlinesResponse = await fetch(`https://newsapi.org/v2/top-headlines?country=${country}&pageSize=40&apiKey=${apiKey}`);
+                const headlinesData = await headlinesResponse.json();
+                
+                if (headlinesData.status !== 'ok') {
+                    throw new Error(headlinesData.message || 'Failed to fetch headlines');
+                }
+                
+                // Add top headlines to our collection
+                if (headlinesData.articles && headlinesData.articles.length > 0) {
+                    allArticles = [...allArticles, ...headlinesData.articles];
+                }
+                
+                // Fetch some additional general news
+                const everythingResponse = await fetch(`https://newsapi.org/v2/everything?q=today&language=en&sortBy=publishedAt&pageSize=30&apiKey=${apiKey}`);
+                const everythingData = await everythingResponse.json();
+                
+                if (everythingData.status === 'ok' && everythingData.articles && everythingData.articles.length > 0) {
+                    // Add to our collection, making sure to avoid duplicates
+                    const existingTitles = new Set(allArticles.map(a => a.title));
+                    const newArticles = everythingData.articles.filter(a => !existingTitles.has(a.title));
+                    allArticles = [...allArticles, ...newArticles];
+                }
+                
+                // Display the headlines in the UI
+                displayNews(headlinesData.articles);
+                
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                // Hide loading indicator
+                document.getElementById('loading').classList.add('hidden');
+            }
+        }
+
+        // Function to handle text-to-speech
+        function speakText(text, buttonElement) {
+            // If already speaking, stop current speech
+            if (window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+                if (currentlySpeaking) {
+                    currentlySpeaking.classList.remove('speaking');
+                    currentlySpeaking.innerHTML = '<i class="fas fa-volume-up"></i>';
+                }
+                // If clicking the same button, just stop and return
+                if (currentlySpeaking === buttonElement) {
+                    currentlySpeaking = null;
+                    return;
+                }
+            }
+            
+            // Create a new speech synthesis utterance
+            const utterance = new SpeechSynthesisUtterance(text);
+            
+            // Set the language to English
+            utterance.lang = 'en-US';
+            
+            // Update button appearance
+            buttonElement.classList.add('speaking');
+            buttonElement.innerHTML = '<i class="fas fa-pause"></i>';
+            currentlySpeaking = buttonElement;
+            
+            // When speech ends, reset the button
+            utterance.onend = function() {
+                buttonElement.classList.remove('speaking');
+                buttonElement.innerHTML = '<i class="fas fa-volume-up"></i>';
+                currentlySpeaking = null;
+            };
+            
+            // Start speaking
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // Function to display news with similar articles
+        function displayNews(articles) {
+            const newsContainer = document.getElementById('newsContainer');
+            newsContainer.innerHTML = '';
+            
+            if (!articles || articles.length === 0) {
+                newsContainer.innerHTML = '<div class="col-span-full text-center py-12 text-gray-400">No news articles found. Please try again later.</div>';
+                return;
+            }
+            
+            articles.forEach((article, index) => {
+                // Skip articles without titles or descriptions
+                if (!article.title || !article.description) return;
+                
+                // Categorize the article
+                const category = categorizeArticle(article);
+                
+                // Find similar articles
+                const similarArticles = findSimilarArticles(article, allArticles, category);
+                
+                // Create category label style
+                let categoryStyle = '';
+                switch (category) {
+                    case 'politics': categoryStyle = 'bg-green-900 text-green-200'; break;
+                    case 'technology': categoryStyle = 'bg-red-900 text-red-200'; break;
+                    case 'science': categoryStyle = 'bg-purple-900 text-purple-200'; break;
+                    case 'sports': categoryStyle = 'bg-yellow-900 text-yellow-200'; break;
+                    case 'entertainment': categoryStyle = 'bg-indigo-900 text-indigo-200'; break;
+                    case 'health': categoryStyle = 'bg-pink-900 text-pink-200'; break;
+                    case 'business': categoryStyle = 'bg-gray-900 text-gray-200'; break;
+                    default: categoryStyle = 'bg-blue-900 text-blue-200';
+                }
+                
+                const card = document.createElement('div');
+                card.className = `news-card ${category}`;
+                card.style.setProperty('--delay', `${0.1 * index}s`);
+                
+                // Format the publication date for the main article
+                const pubDate = article.publishedAt ? new Date(article.publishedAt).toLocaleDateString() : 'Unknown date';
+                
+                // Generate a unique ID for this article
+                const articleId = `article-${index}`;
+                
+                // Create the card HTML with speaker icon
+                card.innerHTML = `
+                    <div class="p-4">
+                        <div class="flex justify-between items-start">
+                            <span class="category-pill ${categoryStyle}">${category.charAt(0).toUpperCase() + category.slice(1)}</span>
+                            <div class="speaker-btn" data-target="${articleId}">
+                                <i class="fas fa-volume-up"></i>
+                            </div>
+                        </div>
+                        <h3 class="text-lg font-bold mt-2">${article.title}</h3>
+                        <p class="text-gray-400 text-sm mt-1">${pubDate} · ${article.source?.name || 'Unknown source'}</p>
+                        <p class="mt-3 text-gray-300" id="${articleId}">${article.description}</p>
+                        ${article.url ? `<a href="${article.url}" target="_blank" class="inline-block mt-4 text-blue-400 hover:text-blue-300 hover:underline">Read full article</a>` : ''}
+                    </div>
+                `;
+                
+                // Add similar articles if available
+                if (similarArticles.length > 0) {
+                    const similarContainer = document.createElement('div');
+                    similarContainer.className = 'bg-gray-800 bg-opacity-70 border-t border-gray-700 p-4';
+                    
+                    let similarHTML = `<div class="flex justify-between items-center mb-3">
+                        <h4 class="font-semibold text-gray-300">Similar Stories</h4>
+                        <div class="speaker-btn" data-target="similar-${articleId}">
+                            <i class="fas fa-volume-up"></i>
+                        </div>
+                    </div>`;
+                    
+                    // Build similar stories content with their descriptions
+                    let similarContentForSpeech = "Similar Stories: ";
+                    
+                    similarArticles.forEach((similar, idx) => {
+                        // Add to speech content
+                        similarContentForSpeech += `${similar.title}. ${similar.description}. `;
+                        
+                        // Removed date from similar stories as requested
+                        similarHTML += `
+                            <div class="mb-3 pb-3 border-b border-gray-700 last:border-0 last:mb-0 last:pb-0">
+                                <h5 class="font-medium text-gray-200">${similar.title}</h5>
+                                <p class="text-sm text-gray-400">${similar.source?.name || 'Unknown source'}</p>
+                                <p class="text-sm mt-1 text-gray-300">${similar.description}</p>
+                                ${similar.url ? `<a href="${similar.url}" target="_blank" class="text-xs text-blue-400 hover:underline">Read more</a>` : ''}
+                            </div>
+                        `;
+                    });
+                    
+                    // Hidden element to store the similar content for speech
+                    similarHTML += `<div id="similar-${articleId}" class="hidden">${similarContentForSpeech}</div>`;
+                    
+                    similarContainer.innerHTML = similarHTML;
+                    card.appendChild(similarContainer);
+                }
+                
+                newsContainer.appendChild(card);
+            });
+            
+            // Add click event listeners to speaker buttons
+            document.querySelectorAll('.speaker-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const targetId = this.getAttribute('data-target');
+                    const targetElement = document.getElementById(targetId);
+                    if (targetElement) {
+                        speakText(targetElement.textContent, this);
+                    }
+                });
+            });
+        }
+
+        // Function to show error messages
+        function showError(message) {
+            const errorElement = document.getElementById('errorMessage');
+            document.getElementById('errorText').textContent = message;
+            errorElement.classList.remove('hidden');
+            document.getElementById('loading').classList.add('hidden');
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if speech synthesis is supported
+            if ('speechSynthesis' in window) {
+                console.log("Text-to-speech is supported!");
+            } else {
+                console.log("Text-to-speech is not supported.");
+                showError("Text-to-speech is not supported in your browser.");
+            }
+            
+            // Fetch button click handler
+            document.getElementById('fetchButton').addEventListener('click', () => {
+                const apiKey = document.getElementById('apiKey').value.trim();
+                fetchNews(apiKey);
+            });
+            
+            // Category filter click handlers
+            document.querySelectorAll('.category-filter').forEach(button => {
+                button.addEventListener('click', () => {
+                    const category = button.getAttribute('data-category');
+                    
+                    // Update active class
+                    document.querySelectorAll('.category-filter').forEach(btn => {
+                        btn.classList.remove('ring-2', 'ring-offset-2');
+                    });
+                    button.classList.add('ring-2', 'ring-offset-2');
+                    
+                    // Filter the displayed articles
+                    const newsCards = document.querySelectorAll('.news-card');
+                    newsCards.forEach(card => {
+                        if (category === 'all' || card.classList.contains(category)) {
+                            card.style.display = 'block';
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+                });
+            });
+            
+            // Auto-fetch news on page load with the API key
+            const apiKey = document.getElementById('apiKey').value.trim();
+            if (apiKey) {
+                fetchNews(apiKey);
+            }
+        });
+    </script>
+
+    <footer class="bg-black text-white mt-12 py-6">
+        <div class="container mx-auto px-4 text-center">
+            <p>Echo Mode News Comparison</p>
+            <p class="text-sm mt-2 text-gray-400">Finding patterns and connections between today's headlines.</p>
+        </div>
+    </footer>
+</body>
+</html>
