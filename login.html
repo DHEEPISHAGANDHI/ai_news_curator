@@ -4,121 +4,251 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login/Signup Form</title>
-  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.0/css/bootstrap.min.css">
+  <title>Login / Sign Up</title>
   <link rel="stylesheet" href="https://unicons.iconscout.com/release/v2.1.9/css/unicons.css">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #1f2029;
+      overflow: hidden;
+    }
+
+    .video-bg {
+      position: fixed;
+      top: 0; left: 0;
+      min-width: 100%; min-height: 100%;
+      object-fit: cover;
+      z-index: 0;
+      opacity: 0.2;
+    }
+
+    .wrapper {
+      position: relative;
+      z-index: 1;
+      width: 420px;
+      max-width: 95vw;
+      background: rgba(255, 255, 255, 0.07);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-radius: 18px;
+      padding: 44px 38px 36px;
+      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .tabs {
+      display: flex;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 32px;
+      gap: 4px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background: transparent;
+      color: rgba(255, 255, 255, 0.55);
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: background 0.25s, color 0.25s;
+    }
+
+    .tab-btn.active {
+      background: #ffeba7;
+      color: #102770;
+    }
+
+    .form-panel { display: none; }
+    .form-panel.active { display: block; }
+
+    .form-title {
+      color: #fff;
+      font-weight: 700;
+      font-size: 22px;
+      margin-bottom: 26px;
+    }
+
+    .form-group {
+      position: relative;
+      margin-bottom: 16px;
+    }
+
+    .form-group i {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 20px;
+      color: rgba(255, 255, 255, 0.45);
+      pointer-events: none;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 13px 16px 13px 46px;
+      height: 50px;
+      background: rgba(255, 255, 255, 0.09);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 9px;
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .form-group input::placeholder { color: rgba(255, 255, 255, 0.38); }
+
+    .form-group input:focus {
+      border-color: #ffeba7;
+      background: rgba(255, 255, 255, 0.13);
+    }
+
+    .btn-submit {
+      width: 100%;
+      height: 50px;
+      background: #ffeba7;
+      color: #102770;
+      border: none;
+      border-radius: 9px;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .btn-submit:hover { background: #102770; color: #ffeba7; }
+
+    .forgot-link {
+      display: block;
+      text-align: center;
+      margin-top: 18px;
+      color: rgba(255, 255, 255, 0.45);
+      font-size: 13px;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .forgot-link:hover { color: #ffeba7; text-decoration: none; }
+  </style>
 </head>
 
 <body>
-    <video autoplay muted loop class="video-bg">
-        <source src="video.mp4" type="video/mp4"> 
-        Your browser does not support HTML5 video.
-      </video>
-      
-  
-  <div class="section">
-    <div class="container">
-      <div class="row full-height justify-content-center">
-        <div class="col-12 text-center align-self-center py-5">
-          <div class="section pb-5 pt-5 pt-sm-2 text-center">
-            <h6 class="mb-0 pb-3">
-              <span  >Log In </span>
-              <span>Sign Up</span>
-            </h6>
-            <input class="checkbox" type="checkbox" id="reg-log" name="reg-log"/>
-            <label for="reg-log"></label>
+  <video autoplay muted loop class="video-bg">
+    <source src="video1.mp4" type="video/mp4">
+  </video>
 
-            <div class="card-3d-wrap mx-auto">
-              <div class="card-3d-wrapper">
-                <div class="card-front">
-                  <div class="center-wrap">
-                    <div class="section text-center">
-                      <h4 class="mb-4 pb-3" style="color:black;">Log In</h4>
-                      <div class="form-group">
-                        <input type="email" name="logemail" class="form-style" placeholder="Your Email" id="logemail" autocomplete="off">
-                        <i class="input-icon uil uil-at"></i>
-                      </div>  
-                      <div class="form-group mt-2">
-                        <input type="password" name="logpass" class="form-style" placeholder="Your Password" id="logpass" autocomplete="off">
-                        <i class="input-icon uil uil-lock-alt"></i>
-                      </div>
-                      <a href="#" class="btn mt-4">submit</a>
-                        <p class="mb-0 mt-4 text-center">
-                          <a href="#0" class="link">Forgot your password?</a>
-                        </p>
-                    </div>
-                  </div>
-                </div>
+  <div class="wrapper">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('login')">Log In</button>
+      <button class="tab-btn" onclick="switchTab('signup')">Sign Up</button>
+    </div>
 
-                <div class="card-back">
-                  <div class="center-wrap">
-                    <div class="section text-center">
-                      <h4 class="mb-4 pb-3" style="color:black;">Sign Up</h4>
-                      <div class="form-group">
-                        <input type="text" name="logname" class="form-style" placeholder="Your Full Name" id="logname" autocomplete="off">
-                        <i class="input-icon uil uil-user"></i>
-                      </div>  
-                      <div class="form-group mt-2">
-                        <input type="email" name="logemail" class="form-style" placeholder="Your Email" id="logemail" autocomplete="off">
-                        <i class="input-icon uil uil-at"></i>
-                      </div>  
-                      <div class="form-group mt-2">
-                        <input type="password" name="logpass" class="form-style" placeholder="Your Password" id="logpass" autocomplete="off">
-                        <i class="input-icon uil uil-lock-alt"></i>
-                      </div>
-                      <a href="#" class="btn mt-4">submit</a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+    <!-- Login Panel -->
+    <div class="form-panel active" id="loginPanel">
+      <h4 class="form-title">Welcome Back</h4>
+      <div class="form-group">
+        <i class="uil uil-at"></i>
+        <input type="email" id="logemail" placeholder="Your Email" autocomplete="off">
       </div>
+      <div class="form-group">
+        <i class="uil uil-lock-alt"></i>
+        <input type="password" id="logpass" placeholder="Your Password" autocomplete="off">
+      </div>
+      <button class="btn-submit" id="loginBtn">Submit</button>
+      <a href="#" class="forgot-link">Forgot your password?</a>
+    </div>
+
+    <!-- Sign Up Panel -->
+    <div class="form-panel" id="signupPanel">
+      <h4 class="form-title">Create Account</h4>
+      <div class="form-group">
+        <i class="uil uil-user"></i>
+        <input type="text" id="logname" placeholder="Your Full Name" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <i class="uil uil-at"></i>
+        <input type="email" id="signupemail" placeholder="Your Email" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <i class="uil uil-lock-alt"></i>
+        <input type="password" id="signuppass" placeholder="Your Password" autocomplete="off">
+      </div>
+      <button class="btn-submit" id="signupBtn">Submit</button>
     </div>
   </div>
+
   <script>
-    // LOGIN FUNCTION
-    document.querySelector('.card-front .btn').addEventListener('click', async () => {
+    const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+      ? 'http://localhost:5000'
+      : '';
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
+      if (tab === 'login') {
+        document.querySelectorAll('.tab-btn')[0].classList.add('active');
+        document.getElementById('loginPanel').classList.add('active');
+      } else {
+        document.querySelectorAll('.tab-btn')[1].classList.add('active');
+        document.getElementById('signupPanel').classList.add('active');
+      }
+    }
+
+    document.getElementById('loginBtn').addEventListener('click', async () => {
       const email = document.getElementById('logemail').value;
       const password = document.getElementById('logpass').value;
-  
-      const res = await fetch('http://localhost:5000/login', {
+
+      const res = await fetch(`${API_BASE}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
-  
+
       const data = await res.json();
-  
+
       if (data.message === 'Login successful') {
-  localStorage.setItem("userEmail", email); 
-  window.location.href = 'prefer.html';
+        localStorage.setItem("userEmail", email);
+        window.location.href = 'prefer.html';
       } else {
         alert(data.message);
       }
     });
-  
-    // SIGNUP FUNCTION
-    document.querySelector('.card-back .btn').addEventListener('click', async () => {
+
+    document.getElementById('signupBtn').addEventListener('click', async () => {
       const name = document.getElementById('logname').value;
-      const email = document.querySelector('.card-back #logemail').value;
-      const password = document.querySelector('.card-back #logpass').value;
-  
-      const res = await fetch('http://localhost:5000/signup', {
+      const email = document.getElementById('signupemail').value;
+      const password = document.getElementById('signuppass').value;
+
+      const res = await fetch(`${API_BASE}/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password }),
       });
-  
+
       const data = await res.json();
-  
+
       if (data.message === 'User created') {
-  localStorage.setItem("userEmail", email); 
-  window.location.href = 'prefer.html';
-}else {
+        localStorage.setItem("userEmail", email);
+        window.location.href = 'prefer.html';
+      } else {
         alert(data.message);
       }
     });
