@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: ai-news-curator
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    autoDeploy: true
+    healthCheckPath: /
+    envVars:
+      - key: MONGODB_URI
+      - key: NEWS_API_KEY
+      - key: GEMINI_API_KEY
+      - key: OPENAI_API_KEY
+      - key: OPENAI_MODEL
