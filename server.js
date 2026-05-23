@@ -19,6 +19,18 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
+app.get('/', (req, res) => {
+  res.redirect('/news.html');
+});
+
+app.get('/index.html', (req, res) => {
+  res.redirect('/news.html');
+});
+
+app.get('/favorites.html', (req, res) => {
+  res.redirect('/favourites.html');
+});
+
 const categoryQueries = {
   football: 'football OR "premier league" OR UEFA',
   cricket: 'cricket',
