@@ -9,7 +9,7 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Special+Gothic+Condensed+One&display=swap');
     body {
-      background: url('news.jpg') no-repeat center center fixed;
+      background: url('newimg.jpeg') no-repeat center center fixed;
       background-size: cover;
       color: white;
       font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
@@ -248,7 +248,9 @@
 </div>
 
 <script>
-  const apiKey = "e2561402e840486aa86e56f2fe6f0681";
+  const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port !== '5000'
+    ? 'http://localhost:5000'
+    : '';
   const preferences = JSON.parse(localStorage.getItem("userPreferences")) || ['general'];
   // Store fetched articles globally so we can access them when needed
   let currentArticles = [];
@@ -270,8 +272,8 @@
       else if (category === 'cricket') queryParam = 'cricket OR IPL OR world cup';
 
       const url = category === 'football' || category === 'cricket'
-        ? `https://newsapi.org/v2/everything?q=${encodeURIComponent(queryParam)}&language=en&pageSize=6&apiKey=${apiKey}`
-        : `https://newsapi.org/v2/top-headlines?category=${category}&language=en&pageSize=6&apiKey=${apiKey}`;
+        ? `${API_BASE}/api/news-proxy?endpoint=everything&q=${encodeURIComponent(queryParam)}&language=en&pageSize=6`
+        : `${API_BASE}/api/news-proxy?endpoint=top-headlines&category=${encodeURIComponent(category)}&language=en&pageSize=6`;
 
       const response = await fetch(url);
       const data = await response.json();

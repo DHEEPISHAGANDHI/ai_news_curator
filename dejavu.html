@@ -10,7 +10,7 @@
         @import url('https://fonts.googleapis.com/css2?family=Special+Gothic+Condensed+One&display=swap');
         
         body {
-            background: url('news.jpg') no-repeat center center fixed;
+            background: url('newimg.jpeg') no-repeat center center fixed;
             background-size: cover;
             color: white;
             font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
@@ -174,6 +174,10 @@
     </div>
 
     <script>
+        const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port !== '5000'
+            ? 'http://localhost:5000'
+            : '';
+
         // Global variable to store all fetched articles
         let allArticles = [];
         // Global variable for speech synthesis
@@ -258,12 +262,7 @@
         }
         
         // Function to fetch news from multiple endpoints to create a larger dataset
-        async function fetchNews(apiKey) {
-            if (!apiKey) {
-                showError("API key is missing. Please reload the page or contact support.");
-                return;
-            }
-            
+        async function fetchNews() {
             const country = document.getElementById('countrySelect').value;
             
             // Show loading indicator
@@ -275,7 +274,7 @@
                 allArticles = []; // Reset global articles array
                 
                 // Get top headlines from selected country
-                const headlinesResponse = await fetch(`https://newsapi.org/v2/top-headlines?country=${country}&pageSize=40&apiKey=${apiKey}`);
+                const headlinesResponse = await fetch(`${API_BASE}/api/news-proxy?endpoint=top-headlines&country=${encodeURIComponent(country)}&language=en&pageSize=40`);
                 const headlinesData = await headlinesResponse.json();
                 
                 if (headlinesData.status !== 'ok') {
@@ -288,7 +287,7 @@
                 }
                 
                 // Fetch some additional general news
-                const everythingResponse = await fetch(`https://newsapi.org/v2/everything?q=today&language=en&sortBy=publishedAt&pageSize=30&apiKey=${apiKey}`);
+                const everythingResponse = await fetch(`${API_BASE}/api/news-proxy?endpoint=everything&q=${encodeURIComponent('today')}&language=en&sortBy=publishedAt&pageSize=30`);
                 const everythingData = await everythingResponse.json();
                 
                 if (everythingData.status === 'ok' && everythingData.articles && everythingData.articles.length > 0) {
@@ -478,8 +477,7 @@
             
             // Fetch button click handler
             document.getElementById('fetchButton').addEventListener('click', () => {
-                const apiKey = document.getElementById('apiKey').value.trim();
-                fetchNews(apiKey);
+                fetchNews();
             });
             
             // Category filter click handlers
@@ -506,10 +504,7 @@
             });
             
             // Auto-fetch news on page load with the API key
-            const apiKey = document.getElementById('apiKey').value.trim();
-            if (apiKey) {
-                fetchNews(apiKey);
-            }
+            fetchNews();
         });
     </script>
 

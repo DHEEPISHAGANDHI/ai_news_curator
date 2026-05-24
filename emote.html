@@ -10,7 +10,7 @@
 
   <style>
     body {
-      background: url('news.jpg') no-repeat center center fixed;
+      background: url('newimg.jpeg') no-repeat center center fixed;
       background-size: cover;
       color: white;
       font-family: 'Segoe UI', sans-serif;
@@ -113,7 +113,9 @@
   <script type="module">
     import Sentiment from 'https://cdn.skypack.dev/sentiment@5.0.2';
     const sentiment = new Sentiment();
-    const apiKey = 'c08eb8f5f0a44b4391103620bc2952d8';
+    const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port !== '5000'
+      ? 'http://localhost:5000'
+      : '';
     let allArticles = [];
 
     const credibilityLevels = {
@@ -226,7 +228,7 @@
     }
 
     async function fetchGlobalGeneralNews() {
-      const url = `https://newsapi.org/v2/top-headlines?category=general&pageSize=70&language=en&apiKey=${apiKey}`;
+      const url = `${API_BASE}/api/news-proxy?endpoint=top-headlines&category=general&pageSize=70&language=en`;
       const response = await fetch(url);
       const data = await response.json();
       return data.articles;

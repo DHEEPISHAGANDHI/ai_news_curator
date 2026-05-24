@@ -337,6 +337,52 @@ app.get('/api/news', async (req, res) => {
       res.status(502).json({ message: 'Failed to fetch news articles.' });
     }
   });
+
+app.get('/api/news-proxy', async (req, res) => {
+    const newsApiKey = process.env.NEWS_API_KEY;
+
+    if (!newsApiKey) {
+      return res.status(500).json({ message: 'News API key is not configured on the server.' });
+    }
+
+    const endpoint = (req.query.endpoint || 'top-headlines').toString().trim().toLowerCase() === 'everything'
+      ? 'everything'
+      : 'top-headlines';
+
+    const allowedParams = ['q', 'country', 'category', 'language', 'sortBy', 'pageSize', 'page'];
+    const params = new URLSearchParams();
+
+    allowedParams.forEach((key) => {
+      const value = req.query[key];
+      if (typeof value === 'string' && value.trim()) {
+        params.append(key, value.trim());
+      }
+    });
+
+    if (!params.has('language')) {
+      params.set('language', 'en');
+    }
+
+    if (!params.has('pageSize')) {
+      params.set('pageSize', '20');
+    }
+
+    if (endpoint === 'everything' && !params.has('q')) {
+      return res.status(400).json({ message: 'Query parameter q is required for everything endpoint.' });
+    }
+
+    params.set('apiKey', newsApiKey);
+
+    try {
+      const newsApiUrl = `https://newsapi.org/v2/${endpoint}?${params.toString()}`;
+      const response = await axios.get(newsApiUrl, { timeout: 15000 });
+      res.json(response.data);
+    } catch (error) {
+      const details = error.response?.data || error.message;
+      console.error('News proxy error:', details);
+      res.status(502).json({ message: 'Failed to fetch news from provider.' });
+    }
+  });
   
   
 
